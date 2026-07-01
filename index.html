@@ -284,7 +284,8 @@
     const state = {
       order: [],
       picked: new Set(),
-      current: null
+      current: null,
+      spinning: false
     };
 
     const askBtn = document.querySelector("#askBtn");
@@ -304,7 +305,29 @@
       return copy;
     }
 
+    function setControlsDisabled(disabled) {
+      askBtn.disabled = disabled;
+      resetBtn.disabled = disabled;
+      continueBtn.disabled = disabled || state.picked.size >= questions.length;
+    }
+
+    function previewQuestion(index) {
+      resultLabel.textContent = "抽題中...";
+      resultQuestion.textContent = questions[index];
+    }
+
+    function finalizeQuestion(index) {
+      state.current = index;
+      state.picked.add(index);
+      state.spinning = false;
+      resultLabel.textContent = `第 ${index + 1} 題`;
+      resultQuestion.textContent = questions[index];
+      render();
+    }
+
     function pickFrom(indexes) {
+      if (state.spinning) return;
+
       if (indexes.length === 0) {
         resultLabel.textContent = "目前題目";
         resultQuestion.textContent = "所有題目都已抽完";
@@ -313,11 +336,25 @@
       }
 
       const next = indexes[Math.floor(Math.random() * indexes.length)];
-      state.current = next;
-      state.picked.add(next);
-      resultLabel.textContent = `第 ${next + 1} 題`;
-      resultQuestion.textContent = questions[next];
+      let previewCount = 0;
+      const totalPreviews = 18;
+      const previewIndexes = indexes.length > 1 ? indexes.filter((index) => index !== next) : indexes;
+
+      state.spinning = true;
+      state.current = null;
       render();
+      setControlsDisabled(true);
+
+      const spinTimer = window.setInterval(() => {
+        const previewIndex = previewIndexes[Math.floor(Math.random() * previewIndexes.length)];
+        previewQuestion(previewIndex);
+        previewCount += 1;
+
+        if (previewCount >= totalPreviews) {
+          window.clearInterval(spinTimer);
+          window.setTimeout(() => finalizeQuestion(next), 120);
+        }
+      }, 95);
     }
 
     function askQuestion() {
@@ -362,7 +399,7 @@
       });
 
       counter.textContent = `已抽 ${state.picked.size} / ${questions.length}`;
-      continueBtn.disabled = state.picked.size >= questions.length;
+      setControlsDisabled(state.spinning);
     }
 
     askBtn.addEventListener("click", askQuestion);
