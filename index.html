@@ -124,15 +124,18 @@
       transform: translateY(0);
     }
 
-    .primary,
-    .secondary {
+    .primary {
       background: var(--accent);
       color: #fff;
     }
 
-    .primary:hover,
-    .secondary:hover {
+    .primary:hover {
       background: var(--accent-dark);
+    }
+
+    .draw-button {
+      min-height: 128px;
+      font-size: 34px;
     }
 
     .reset {
@@ -242,12 +245,11 @@
     <section class="stage" aria-label="提問區">
       <div class="result" aria-live="polite">
         <p class="result-label" id="resultLabel">目前題目</p>
-        <p class="result-question" id="resultQuestion">請按下進行提問</p>
+        <p class="result-question" id="resultQuestion">請按下出題</p>
       </div>
 
       <div class="controls">
-        <button type="button" class="primary" id="askBtn">進行提問</button>
-        <button type="button" class="secondary" id="continueBtn">繼續提問</button>
+        <button type="button" class="primary draw-button" id="askBtn">出題</button>
         <button type="button" class="reset" id="resetBtn">Reset</button>
       </div>
     </section>
@@ -257,28 +259,20 @@
 
   <script>
     const questions = [
-      "在《青春末世物語」一劇中，在電影的結尾，悠多與小幸最後道別的地點在哪裡？",
-      "哪一個樂團參與了《欠妳的那場婚禮》音樂合作並客串演出？",
-      "在《重返月球：太空新世紀》紀錄片中，執行人類首次登月任務的是哪一個太空計畫或任務？",
-      "在《泰勒絲：不只是美國小姐》紀錄片中，泰勒絲的未婚夫是哪種職業運動的球星？",
-      "《寰宇龍虎豹》的主持人中，誰曾經擔任過台北市議員?",
-      "村上隆暌違多年的展覽，是在日本哪個城市推出？",
-      "《喵的奇幻漂流》中，主角「喵喵」是什麼顏色的呢？",
-      "《萌寵列車》中，獵鷹的師傅「叔叔們」總共有幾位？",
-      "中華職棒二軍總共有幾個球隊呢?",
-      "甲子園是發生在哪個國家最知名的棒球賽事之一",
-      "你今天參觀的電視台叫甚麼電視台?",
-      "最多台灣原創影片的影音平台是甚麼平台",
-      "最多優質卡通的影音平台是甚麼平台",
-      "你現在在什麼攤位?",
-      "在《青春末世物語》一劇中，悠多與小幸的惡作劇中，誰的跑車被「豎立」在校園中庭？",
-      "在《欠妳的那場婚禮》一劇中，周可傑、韓其森與王永貴三人共組的樂團名稱是什麼？",
-      "美國太空總署的英文名稱縮寫為什麼？",
-      "在《泰勒絲：不只是美國小姐》紀錄片中，泰勒絲最喜歡哪一種動物？",
-      "請說出任一位《寰宇龍虎豹》的主持人",
-      "村上隆曾和哪位名人或品牌合作過？",
-      "《喵的奇幻漂流》中，貓是搭什麼工具去漂流呢？",
-      "《萌寵列車》中，「獵鷹」是一隻什麼動物呢？"
+      "請問《欠妳的那場婚禮》中，周可傑負責樂團的哪一個職位？",
+      "請問 在《青春末世物語》中，悠多的摯友叫什麼名字？",
+      "請問 美國太空總署的英文名稱縮寫是什麼？",
+      "請問 歌手 Taylor Swift（泰勒絲）是哪一國人？",
+      "請問 《寰宇龍虎豹》共有幾位主持人？",
+      "請問 村上隆暌違多年的展覽，是在日本哪個城市推出？",
+      "請問 《喵的奇幻漂流》中，主角「喵喵」是什麼顏色的呢？",
+      "請問《萌寵列車》中，浣熊叫什麼名字呢？",
+      "請說出一個中華職棒二軍的球隊名稱。",
+      "請問「甲子園」是發生在哪個國家最知名的棒球賽事之一？",
+      "請問 你今天參觀的電視台是什麼電視台？",
+      "請問 擁有最多台灣原創影片的影音平台是什麼平台？",
+      "請問 擁有最多優質卡通的影音平台是什麼平台？",
+      "請問 你現在所在的是哪一個攤位？"
     ];
 
     const state = {
@@ -289,7 +283,6 @@
     };
 
     const askBtn = document.querySelector("#askBtn");
-    const continueBtn = document.querySelector("#continueBtn");
     const resetBtn = document.querySelector("#resetBtn");
     const counter = document.querySelector("#counter");
     const resultLabel = document.querySelector("#resultLabel");
@@ -306,9 +299,8 @@
     }
 
     function setControlsDisabled(disabled) {
-      askBtn.disabled = disabled;
+      askBtn.disabled = disabled || state.picked.size >= questions.length;
       resetBtn.disabled = disabled;
-      continueBtn.disabled = disabled || state.picked.size >= questions.length;
     }
 
     function previewQuestion(index) {
@@ -331,7 +323,7 @@
       if (indexes.length === 0) {
         resultLabel.textContent = "目前題目";
         resultQuestion.textContent = "所有題目都已抽完";
-        continueBtn.disabled = true;
+        setControlsDisabled(false);
         return;
       }
 
@@ -358,10 +350,6 @@
     }
 
     function askQuestion() {
-      pickFrom(questions.map((_, index) => index));
-    }
-
-    function continueQuestion() {
       const available = questions
         .map((_, index) => index)
         .filter((index) => !state.picked.has(index));
@@ -373,7 +361,7 @@
       state.picked.clear();
       state.current = null;
       resultLabel.textContent = "目前題目";
-      resultQuestion.textContent = "請按下進行提問";
+      resultQuestion.textContent = "請按下出題";
       render();
     }
 
@@ -403,7 +391,6 @@
     }
 
     askBtn.addEventListener("click", askQuestion);
-    continueBtn.addEventListener("click", continueQuestion);
     resetBtn.addEventListener("click", resetQuestions);
 
     resetQuestions();
